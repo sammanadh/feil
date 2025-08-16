@@ -1,0 +1,28 @@
+{
+  "name": "electron_tut",
+  "version": "1.0.0",
+  "main": "main.ts",
+  "scripts": {
+    "start": "electron ./dist/main.js",
+    "build": "tsc && cpx 'src/**/*.!(ts)' dist",
+    "dev": "concurrently \"tsc -w\" \"cpx 'src/**/*.!(ts)' dist -w\" \"wait-on dist/main.js && nodemon --exec electron ./dist/main.js --watch dist\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Samman Adhikari",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/electron": "^1.4.38",
+    "@types/node": "^24.0.14",
+    "concurrently": "^9.2.0",
+    "cpx": "^1.5.0",
+    "electron": "^37.2.3",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "wait-on": "^8.0.3"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3"
+  }
+}
