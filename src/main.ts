@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from "electron";
 import chokidar from "chokidar";
 import * as path from "path";
-import fs, { statSync } from "node:fs";
+import fs, { rename, statSync } from "node:fs";
+import { extname } from "node:path";
 
 const DOWNLOADS_DIR = process.env.HOME ? path.join(process.env.HOME, "downloads") : "~/downloads"
 const TARGET_FILES = ["jpt.js"]
@@ -60,6 +61,9 @@ function moveFileToDestination(fileName: string, destination: string) {
 
 type FileWithBt = {
   path: string,
+  dirname: string,
+  basename: string,
+  ext: string,
   bt: number
 }
 
@@ -67,21 +71,25 @@ function renameOlderFiles(containerFolder: string) {
   const allFilesWithBt: FileWithBt[] = []
   for (let file of fs.readdirSync(containerFolder)) {
     const filePath = path.join(containerFolder, file)
+    let ext = path.extname(filePath)
+    const basenameWithCount = path.basename(filePath, ext);
+    let basename = basenameWithCount.split("@")[0]
     const stat = fs.statSync(filePath)
-    allFilesWithBt.push({ path: filePath, bt: stat.birthtimeMs })
+    allFilesWithBt.push({ path: filePath, dirname: path.dirname(filePath), basename, ext, bt: stat.birthtimeMs })
   }
 
+  // we need to sort the files in decending rename order
+  // because we need to start renaming from the oldest file
+  // so there will be no namoing conflicts
   allFilesWithBt.sort((a, b) => {
     if (a.bt == b.bt) return 0;
-    else if (a.bt < b.bt) return 1;
+    else if (a.bt > b.bt) return 1;
     else return -1;
   })
 
-  for (let idx in allFilesWithBt) {
-    const file = allFilesWithBt[idx];
-    const mainName = file.path.includes("@") ? file.path.split("@")[0] : file.path;
-    const newFilePath = mainName + "@" + (idx + 1);
-    console.log(newFilePath)
-    fs.renameSync(file.path, newFilePath)
-  }
+  allFilesWithBt.forEach((file, idx) => {
+    const count = allFilesWithBt.length - idx;
+    const newFilePath = file.dirname + "/" + file.basename + "@" + count + file.ext;
+    fs.renameSync(file.path, newFilePath);
+  })
 }
